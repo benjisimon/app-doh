@@ -23,7 +23,6 @@
                   (app-doh-path "creation")
                   (app-doh-path "logs"))))
     
-
 (define-simple-class main (android.app.Activity)
   
   ((onCreate (savedInstance :: Bundle))
@@ -33,8 +32,7 @@
    (let* ((on-create-scm (app-doh-path "creation/on-create.scm"))
           (ready? (file-exists? on-create-scm)))
      (if ready?
-       (fluid-let ((the-activity (this)))
-         (load on-create-scm))
+       (load on-create-scm)
        ((this):setContentView 
         (android.widget.TextView (this)
                                  text: (string-append "Doing nothing. File not found: " on-create-scm))))))
