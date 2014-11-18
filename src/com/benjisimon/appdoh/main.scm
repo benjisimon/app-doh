@@ -6,6 +6,10 @@
 (require 'android-defs)
 
 (define-alias Bundle android.os.Bundle)
+(define-alias Log android.util.Log)
+
+(define (logi message)
+  (Log:i "main.scm" message))
 
 (define app-doh-root "/mnt/sdcard/AppDoh")
 
@@ -32,7 +36,11 @@
    (let* ((on-create-scm (app-doh-path "creation/on-create.scm"))
           (ready? (file-exists? on-create-scm)))
      (if ready?
-       (load on-create-scm)
+       (begin
+         (<kawa.standard.Scheme>:registerEnvironment)
+         (parameterize ((current-activity (this)))
+           (logi "invoking (load ...)")
+           (load on-create-scm)))
        ((this):setContentView 
         (android.widget.TextView (this)
                                  text: (string-append "Doing nothing. File not found: " on-create-scm))))))
