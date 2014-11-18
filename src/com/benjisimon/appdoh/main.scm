@@ -7,6 +7,10 @@
 
 (define-alias Bundle android.os.Bundle)
 (define-alias Log android.util.Log)
+(define-alias MenuItem  android.view.MenuItem)
+(define-alias Intent  android.content.Intent)
+
+(define && string-append)
 
 (define (logi message)
   (Log:i "main.scm" message))
@@ -28,22 +32,35 @@
                   (app-doh-path "logs"))))
     
 (define-simple-class main (android.app.Activity)
-  
-  ((onCreate (savedInstance :: Bundle))
-   (invoke-special android.app.Activity (this) 'onCreate savedInstance)
 
-   (prep-directories)
-   (let* ((on-create-scm (app-doh-path "creation/on-create.scm"))
-          (ready? (file-exists? on-create-scm)))
-     (if ready?
-       (begin
-         (<kawa.standard.Scheme>:registerEnvironment)
-         (parameterize ((current-activity (this)))
-           (logi "invoking (load ...)")
-           (load on-create-scm)))
-       ((this):setContentView 
-        (android.widget.TextView (this)
-                                 text: (string-append "Doing nothing. File not found: " on-create-scm))))))
+ ((on-create-options-menu (menu :: android.view.Menu))
+  (let ((inflator ((this):get-menu-inflater)))
+    (inflator:inflate R$menu:main menu)
+    #t))
+ 
+ ((on-options-item-selected (item :: MenuItem))
+  (let ((selected (MenuItem:getItemId item)))
+    (cond ((equal? selected R$id:refresh)
+           ((this):do-load "on-create")
+           #t)
+          (else #f))))
+ 
+ ((onCreate (savedInstance :: Bundle))
+  (invoke-special android.app.Activity (this) 'onCreate savedInstance)
+  (prep-directories)
+  ((this):do-load "on-create"))
+
+  ((do-load event)
+   (let* ((scm (app-doh-path (&& "creation/" event ".scm"))))
+     (cond ((file-exists? scm)
+            (<kawa.standard.Scheme>:registerEnvironment)
+            (parameterize ((current-activity (this)))
+              (load scm)))
+           (else 
+            ((this):setContentView 
+             (android.widget.TextView (this)
+                                      text: (&& "Doing nothing. No event file found for: " event " (" scm ")")))))))
+  
   
   )
 
