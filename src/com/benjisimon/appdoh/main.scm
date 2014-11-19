@@ -12,6 +12,11 @@
 
 (define && string-append)
 
+(define (exn->string (ex :: java.lang.Throwable))
+  (let ((buffer (open-output-string)))
+    (ex:printStackTrace buffer)
+    (get-output-string buffer)))
+
 (define (logi message)
   (Log:i "main.scm" message))
 
@@ -20,16 +25,14 @@
 (define (app-doh-path . any)
   (if (null? any)
     app-doh-root
-    (string-append app-doh-root "/" (car any))))
+    (string-append app-doh-root "/" (apply string-append any))))
 
 
 (define (prep-directories)
   (for-each (lambda (p)
               (if (not (file-directory? p))
                 (create-directory p)))
-            (list (app-doh-path)
-                  (app-doh-path "creation")
-                  (app-doh-path "logs"))))
+            (list (app-doh-path))))
     
 (define-simple-class main (android.app.Activity)
 
@@ -48,19 +51,18 @@
  ((onCreate (savedInstance :: Bundle))
   (invoke-special android.app.Activity (this) 'onCreate savedInstance)
   (prep-directories)
+  (<kawa.standard.Scheme>:registerEnvironment)
   ((this):do-load "on-create"))
 
   ((do-load event)
-   (let* ((scm (app-doh-path (&& "creation/" event ".scm"))))
-     (cond ((file-exists? scm)
-            (<kawa.standard.Scheme>:registerEnvironment)
-            (parameterize ((current-activity (this)))
-              (load scm)))
-           (else 
-            ((this):setContentView 
-             (android.widget.TextView (this)
-                                      text: (&& "Doing nothing. No event file found for: " event " (" scm ")")))))))
-  
+   (let* ((scm (app-doh-path event ".scm")))
+     (try-catch
+      (parameterize ((current-activity (this)))
+        (load scm))
+      (ex java.lang.Throwable
+          ((this):setContentView 
+           (android.widget.TextView (this)
+                                    text: (exn->string ex)))))))
   
   )
 
