@@ -1,6 +1,13 @@
-(android.util.Log:i "on-create.scm" "Running on-create")
+(require 'android-defs)
 
-(android.app.Activity:setContentView
- (as android.app.Activity (current-activity))
+(define (logi . messages)
+ (android.util.Log:i "on-create.scm" (apply string-append messages)))
+ 
+(logi "Starting")
+
+((current-activity):setContentView
  (android.widget.TextView (current-activity)
-                          text: "Hello World"))
+   text: "Hello World"))
+
+(logi "Ending")
+  
