@@ -8,9 +8,9 @@
   (logi "Starting")
   
   (let ((t (android.widget.TextView (current-activity))))
-   (t:set-text "Hello World"))
+   (t:set-text "Hello World")
    
-  (<android.app.Activity>:setContentView
-   (current-activity) (as android.view.View t))
+   (<android.app.Activity>:setContentView
+    (current-activity) (as android.view.View t)))
   
   (logi "Ending"))
