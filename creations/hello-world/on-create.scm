@@ -1,4 +1,6 @@
 
+(require 'android-defs)
+
 (define (logi . messages)
   (android.util.Log:i "on-create.scm" (apply string-append messages)))
    
